@@ -14,56 +14,14 @@ redirect_from: /getting-started/z-wave/
 
 There is currently support for climate, covers, lights, locks, sensors, switches and thermostats. All will be picked up automatically after configuring this platform.
 
-### {% linkable_title Installation in Virtualenv (python-OpenZWave) %}
-
-If you installed Home Assistant using a virtual environment then please read the instructions on [Installing python-OpenZWave in a virtualenv](https://home-assistant.io/getting-started/installation-virtualenv/#installing-python-openzwave-in-a-virtualenv).
-
 ### {% linkable_title Installation %}
 
-To allow Home Assistant to talk to your Z-Wave USB stick you will have to compile the OpenZWave library and install the related [python-OpenZWave package](https://github.com/OpenZWave/python-openzwave). This can be done as follows. _(Note: The Home Assistant docker image and the All In One installer have support for Z-Wave already built-in!)_
+As of version 0.45, Home Assistant automatically installs python-openzwave from PyPI as needed.
 
-Make sure you have the correct dependencies installed before running the script:
-
-```bash
-$ sudo apt-get install cython3 libudev-dev python3-sphinx python3-setuptools git
-```
-
-Make sure you have at least version 0.23 and at the most 0.24.1 of cython.
+There is one dependency you will need to have installed ahead of time:
 
 ```bash
-$ sudo pip3 install --upgrade cython==0.24.1
-```
-
-Then get the OpenZWave files and switch to the `python3` branch:
-
-<p class='note warning'>Do not use root to build python-openzwave as it will surely fail.</p>
-
-```bash
-$ git clone https://github.com/OpenZWave/python-openzwave.git
-$ cd python-openzwave
-$ git checkout python3
-$ PYTHON_EXEC=$(which python3) make build
-$ sudo PYTHON_EXEC=$(which python3) make install
-```
-
-<p class='note'>
-Instead of `make install`, you can alternatively build your own python-openzwave package which can be easily uninstalled:
-</p>
-
-```bash
-$ sudo apt-get install -y checkinstall
-$ sudo PYTHON_EXEC=$(which python3) checkinstall --pkgname python-openzwave --pkgversion 1.0 --provides python-openzwave
-```
-
-With this installation, your `config_path` needed below will resemble:
-
-```bash
-/usr/local/lib/python3.4/dist-packages/libopenzwave-0.3.0b8-py3.4-linux-x86_64.egg/config
-```
-
-If you followed along with setting up a virtual environment, your path will be:
-```bash
-/srv/homeassistant/python-openzwave/openzwave/config
+$ sudo apt-get install libudev-dev
 ```
 
 ### {% linkable_title Configuration %}
@@ -77,15 +35,16 @@ zwave:
 Configuration variables:
 
 - **usb_path** (*Optional*): The port where your device is connected to your Home Assistant host.
-- **config_path** (*Optional*): The path to the Python OpenZWave configuration files. Defaults to the folder `config` in your Python OpenZWave install directory.
+- **config_path** (*Optional*): The path to the Python OpenZWave configuration files. Defaults to the 'config' that is installed by python-openzwave
 - **autoheal** (*Optional*): Allows disabling auto Z-Wave heal at midnight. Defaults to True.
 - **polling_interval** (*Optional*): The time period in milliseconds between polls of a nodes value. Be careful about using polling values below 30000 (30 seconds) as polling can flood the zwave network and cause problems.
 - **device_config** (*Optional*): This attribute contains node-specific override values. (For releases prior to 0.39 this variable is called **customize**) See [Customizing devices and services](https://home-assistant.io/getting-started/customizing-devices/) for format:
   - **polling_intensity** (*Optional*): Enables polling of a value and sets the frequency of polling (0=none, 1=every time through the list, 2=every other time, etc). If not specified then your device will not be polled.
-  - **ignored** (*Optional*): Ignore this entitiy completely. It won't be shown in the Web Interface and no events are generated for it.
+  - **ignored** (*Optional*): Ignore this entity completely. It won't be shown in the Web Interface and no events are generated for it.
   - **refresh_value** (*Optional*): Enable refreshing of the node value. Only the light component uses this. Defaults to False.
   - **delay** (*Optional*): Specify the delay for refreshing of node value. Only the light component uses this. Defaults to 2 seconds.
-- **debug** (*Optional*): Print verbose z-wave info to log. Defaults to False.
+  - **invert_openclose_buttons** (*Optional*): Inverts function of the open and close buttons for the cover domain. Defaults to `False`.
+- **debug** (*Optional*): Print verbose z-wave info to log. Defaults to `False`.
 
 To find the path of your Z-Wave USB stick or module, run:
 
@@ -98,7 +57,7 @@ Or, on some other systems (such as Raspberry Pi), use:
 ```bash
 $ ls /dev/ttyACM*
 
-# If `hass` runs with another user (e.g. *homeassistant* on Hassbian) give access to the stick with:
+# If Home Assistant (`hass`) runs with another user (e.g. *homeassistant* on Hassbian) give access to the stick with:
 $ sudo usermod -a -G dialout homeassistant
 ```
 
@@ -115,12 +74,12 @@ $ ls /dev/cu.usbmodem*
 ```
 
 <p class='note'>
-Depending on what's plugged into your USB ports, the name found above may change. You can lock in a name, such as `/dev/zwave`, by following [these instructions](http://hintshop.ludvig.co.nz/show/persistent-names-usb-serial-devices/). 
+Depending on what's plugged into your USB ports, the name found above may change. You can lock in a name, such as `/dev/zwave`, by following [these instructions](http://hintshop.ludvig.co.nz/show/persistent-names-usb-serial-devices/).
 </p>
 
 ### {% linkable_title Adding Devices %}
 
-To add a Z-Wave device to your system, go to the Services menu and select the `zwave` domain, and select the `add-node` service. Then find your device's add button and press that as well. 
+To add a Z-Wave device to your system, go to the Services menu and select the `zwave` domain, and select the `add-node` service. Then find your device's add button and press that as well.
 
 ### {% linkable_title Adding Security Devices %}
 
@@ -240,9 +199,10 @@ The `zwave` component exposes multiple services to help maintain the network.
 | refresh_entity| Refresh Z-Wave entity by refreshing dependent values.|
 | refresh_node| Refresh Z-Wave node. |
 | remove_node | Put the Z-Wave controller in exclusion mode. Allows one to remove a device from the Z-Wave network.|
-| rename_node | Sets a node's name. Requires an `entity_id` and `name` field. |
+| rename_node | Sets a node's name. Requires a `node_id` and `name` field. |
 | remove_failed_node | Remove a failed node from the network. The Node should be on the Controllers Failed Node List, otherwise this command will fail.|
 | replace_failed_node | Replace a failed device with another. If the node is not in the controller's failed nodes list, or the node responds, this command will fail.|
+| reset_node_meters | Reset a node's meter values. Only works if the node supports this. |
 | set_config_parameter | Let's the user set a config parameter to a node. |
 | soft_reset | Tells the controller to do a "soft reset". This is not supposed to lose any data, but different controllers can behave differently to a "soft reset" command.|
 | start_network | Starts the Z-Wave network.|

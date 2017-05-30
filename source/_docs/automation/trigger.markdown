@@ -15,6 +15,8 @@ Triggers are what starts the processing of an automation rule. It is possible to
 ### {% linkable_title Event trigger %}
 Triggers when an event is being processed. Events are the raw building blocks of Home Assistant. You can match events on just the event name or also require specific event data to be present.
 
+Events can be fired by components or via the API. There is no limitation to the types. A list of built-in events can be found [here](/docs/configuration/events/).
+
 ```yaml
 automation:
   trigger:
@@ -24,7 +26,22 @@ automation:
     event_data:
       mood: happy
 ```
-For example, to carry out actions when Home Assistant starts, you can use `event_type: homeassistant_start`. See other 'events' supported by Home Assistant [here](https://home-assistant.io/topics/events/).
+
+<p class='note warning'>
+  Starting 0.42, it is no longer possible to listen for event `homeassistant_start`. Use the 'homeassistant' platform below instead.
+</p>
+
+### {% linkable_title Home Assistant trigger %}
+
+Use this platform to trigger when Home Assistant starts up and shuts down.
+
+```yaml
+automation:
+  trigger:
+    platform: homeassistant
+    # Event can also be 'shutdown'
+    event: start
+```
 
 ### {% linkable_title MQTT trigger %}
 Triggers when a specific message is received on given topic. Optionally can match on the payload being sent over the topic.
@@ -55,19 +72,17 @@ automation:
 
 ### {% linkable_title State trigger %}
 
-Triggers when the state of tracked entities change. If only entity_id given will match all state changes.
+Triggers when the state of tracked entities change. If only entity_id given will match all state changes, even if only state attributes change.
 
 ```yaml
 automation:
   trigger:
     platform: state
     entity_id: device_tracker.paulus, device_tracker.anne_therese
-    # Optional 
+    # Optional
     from: 'not_home'
+    # Optional
     to: 'home'
-
-    # Alias for 'to'
-    state: 'home'
 
     # If given, will trigger when state has been the to state for X time.
     for:
@@ -78,6 +93,9 @@ automation:
 
 <p class='note warning'>
   Use quotes around your values for `from` and `to` to avoid the YAML parser interpreting values as booleans.
+</p>
+<p class='note warning'>
+  Using `state` as an alias for `to` is deprecated.
 </p>
 
 ### {% linkable_title Sun trigger %}
@@ -104,6 +122,8 @@ automation:
     platform: template
     value_template: "{% raw %}{% if is_state('device_tracker.paulus', 'home') %}true{% endif %}{% endraw %}"
 ```
+
+[template]: /docs/configuration/templating/
 
 ### {% linkable_title Time trigger %}
 
@@ -147,4 +167,21 @@ automation:
     zone: zone.home
     # Event is either enter or leave
     event: enter  # or "leave"
+```
+
+
+### {% linkable_title Multiple triggers %}
+
+When your want your automation rule to have multiple triggers, just prefix the first line of each trigger with a dash (-) and indent the lines following accordingly. Whenever one of the triggers fires, your rule is executed.
+
+```yaml
+automation:
+  trigger:
+      # first trigger
+    - platform: time
+      minutes: 5
+      seconds: 00
+      # our second trigger is the sunset
+    - platform: sun
+      event: sunset
 ```

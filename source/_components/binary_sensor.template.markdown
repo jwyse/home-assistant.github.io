@@ -11,9 +11,9 @@ ha_category: Binary Sensor
 logo: home-assistant.png
 ---
 
-The `template` platform supports sensors which breaks out the state and `state_attributes` from other entities.
+The `template` platform supports sensors which breaks out the `state` and `state_attributes` from other entities. The state of a template binary sensor can only be `on` or `off`.
 
-To enable Template binary sensors in your installation, add the following to your `configuration.yaml` file:
+To enable template binary sensors in your installation, add the following to your `configuration.yaml` file:
 
 ```yaml
 # Example configuration.yaml entry
@@ -91,4 +91,18 @@ binary_sensor:
           - sensor.bedroom_co_status
           - sensor.kitchen_co_status
           - sensor.wardrobe_co_status
+```
+### {% linkable_title Change the icon %}
+
+This example shows how to change the icon based on the day/night cycle.
+
+```yaml
+sensor:
+  - platform: template
+    sensors:
+      day_night:
+        friendly_name: 'Day/Night'
+        value_template: {% raw %}'{% if is_state("sun.sun", "above_horizon") %}Day{% else %}Night{% endif %}'{% endraw %}
+        icon_template: {% raw %}'{% if is_state("sun.sun", "above_horizon") %}mdi:weather-sunny{% else %}mdi:weather-night{% endif %}'{% endraw %}
+        
 ```
